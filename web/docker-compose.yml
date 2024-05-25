@@ -1,0 +1,15 @@
+# docker-compose.yml
+
+version: '3.7'
+
+services:
+  signiling:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: python -m http.server 7000 & sleep infinity
+    volumes:
+      - .:/app
+    ports:
+      - 9999:9999

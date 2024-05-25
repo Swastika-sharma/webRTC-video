@@ -1,0 +1,15 @@
+# docker-compose.yml
+
+version: '3.7'
+
+services:
+  signiling:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: python signiling.py
+    volumes:
+      - .:/app
+    ports:
+      - 9999:9999

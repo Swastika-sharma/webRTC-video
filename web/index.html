@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebRTC working example</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div class="header">
+      <img id="logo" src="./connectLogo.png" />
+    </div>
+    <div class="main">
+      <div class="left">
+        <div class="video-container">
+          <video id="localStream" autoplay playsinline></video>
+          <video id="remoteStream" autoplay playsinline></video>
+          <button
+            id="toggleMic"
+            type="button"
+            alt="Toggle mic status"
+            class="muted"
+            onclick="toggleMic()"
+          >
+            🎙️
+          </button>
+        </div>
+        <div class="filendprogress">
+          <div class="file-container">
+            <input type="file" id="fileInput" />
+            <button id="send">Send</button>
+          </div>
+          <div id="sending">
+            <p id="sub-heading">Sent files</p>
+            <!-- <p id="sending">sending</a> -->
+          </div>
+          <div id="download">
+            <p id="sub-heading">Downloaded files</p>
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="chat"></div>
+      </div>
+    </div>
+    <script src="socket.io.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
