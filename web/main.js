@@ -222,7 +222,7 @@ let handleSignalingData = (data) => {
         // Define a function to handle setting remote description
         const setRemoteDescriptionStable = () => {
           if (pc.signalingState === "stable") {
-            pc.setRemoteDescription(new RTCSessionDescription(message.data))
+            pc.setRemoteDescription(new RTCSessionDescription(data.data))
               .then(() => {
                 // Remote description successfully set
                 console.log("Remote description set successfully.");
@@ -246,7 +246,7 @@ let handleSignalingData = (data) => {
       case "candidate":
         // If remote description is already set, add ICE candidate immediately
         if (pc.remoteDescription) {
-          pc.addIceCandidate(new RTCIceCandidate(message.data.candidate))
+          pc.addIceCandidate(new RTCIceCandidate(data.data.candidate))
             .then(() => {
               console.log("ICE candidate added successfully.");
             })
@@ -255,7 +255,7 @@ let handleSignalingData = (data) => {
             });
         } else {
           // If remote description is not set, queue ICE candidate to be added later
-          iceCandidates.push(message.data.candidate);
+          iceCandidates.push(data.data.candidate);
         }
         break;
 
