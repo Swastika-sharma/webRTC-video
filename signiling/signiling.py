@@ -2,6 +2,10 @@ from aiohttp import web
 import socketio
 import json, ssl
 
+from engineio.payload import Payload
+
+Payload.max_decode_packets = 50
+
 ROOM = 'general'
 
 sio = socketio.AsyncServer(
