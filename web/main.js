@@ -119,10 +119,10 @@ let handleDataChannel = () => {
         console.log("recieved expected file size : ", expectedFileSize);
         var downloadLink = document.createElement("a");
         downloadLink.id = `${expectedFileSize}`;
-        downloadLink.style.backgroundColor="#638f9b";
-        downloadLink.style.margin="10px";
-        downloadLink.style.color="white";
-        downloadLink.style.padding="10px";
+        downloadLink.style.backgroundColor = "#638f9b";
+        downloadLink.style.margin = "10px";
+        downloadLink.style.color = "white";
+        downloadLink.style.padding = "10px";
 
         document.getElementById("download").appendChild(downloadLink);
         return;
@@ -136,12 +136,12 @@ let handleDataChannel = () => {
       receivedChunks.push(event.data);
       receivedSize += event.data.byteLength;
       console.log("recieved file size currently downloaded : ", receivedSize);
-      downloadLink.style.width = `${receivedSize/expectedFileSize}%`;
+      downloadLink.style.width = `${receivedSize / expectedFileSize}%`;
       // Check if the received size matches the expected file size
       if (`${receivedSize}` === `${expectedFileSize}`) {
         console.log("download complete ");
         const receivedBlob = new Blob(receivedChunks);
-        
+
         // Set the ID of the paragraph
         downloadLink.href = URL.createObjectURL(receivedBlob);
         downloadLink.download = filename;
@@ -152,9 +152,6 @@ let handleDataChannel = () => {
         expectedFileSize = 0;
         receivedChunks = [];
         downloadLink.style.width = `100%`;
-
-
-
       }
       // Handle incoming file data here
     };
@@ -205,7 +202,23 @@ let handleSignalingData = (data) => {
         sendAnswer();
         break;
       case "answer":
-        pc.setRemoteDescription(new RTCSessionDescription(data.data));
+        if (pc.signalingState !== "stable") {
+          console.warn(
+            "Cannot set remote description in signaling state: " +
+              pc.signalingState
+          );
+          return;
+        }
+        pc.setRemoteDescription(new RTCSessionDescription(data.data))
+          .then(() => {
+            // Remote description successfully set
+            console.log("Remote description set successfully.");
+            // Continue with the connection process if needed
+          })
+          .catch((error) => {
+            // Handle any errors that occur during setting the remote description
+            console.error("Error setting remote description:", error);
+          });
         break;
       case "candidate":
         pc.addIceCandidate(new RTCIceCandidate(data.data.candidate));
@@ -226,7 +239,7 @@ let toggleMic = () => {
     : "tomato";
 };
 
-function sendFile(expectedFileSize,file) {
+function sendFile(expectedFileSize, file) {
   const chunkSize = 16 * 1024; // 16 KB chunks
   let offset = 0;
 
@@ -255,14 +268,13 @@ function sendFile(expectedFileSize,file) {
       dataChannel.send(chunk);
       offset += chunkSize;
       console.log(`Sent chunk: ${offset} / ${arrayBuffer.byteLength}`);
-      increaseProgress(expectedFileSize,offset/file.size)
+      increaseProgress(expectedFileSize, offset / file.size);
     }
     console.log("sending complete ");
-    increaseProgress(expectedFileSize,100)
+    increaseProgress(expectedFileSize, 100);
   }
 
   reader.readAsArrayBuffer(file);
-
 }
 
 // Usage example with an input element
@@ -273,12 +285,12 @@ document.getElementById("send").addEventListener("click", (event) => {
     filename = file.name;
     dataChannel.send(expectedFileSize);
     dataChannel.send(filename);
-    appendSending("sending",filename,expectedFileSize);
-    sendFile(expectedFileSize,file);
+    appendSending("sending", filename, expectedFileSize);
+    sendFile(expectedFileSize, file);
   }
 });
 
-let appendSending = (parent,text,id) => {
+let appendSending = (parent, text, id) => {
   // Create a new paragraph element
   var paragraph = document.createElement("p");
 
@@ -287,9 +299,9 @@ let appendSending = (parent,text,id) => {
 
   // Set the text content of the paragraph
   paragraph.textContent = `sending ... ${text}`;
-  paragraph.style.backgroundColor="#8b83d0";
-  paragraph.style.padding="10px";
-  paragraph.style.color="white";
+  paragraph.style.backgroundColor = "#8b83d0";
+  paragraph.style.padding = "10px";
+  paragraph.style.color = "white";
 
   // Set the width of the paragraph using inline styles
 
@@ -297,11 +309,9 @@ let appendSending = (parent,text,id) => {
   document.getElementById(parent).appendChild(paragraph);
 };
 
-
-
-let increaseProgress=(id,percentage)=>{
-  document.getElementById(id).style.width=`${percentage}%`;
-}
+let increaseProgress = (id, percentage) => {
+  document.getElementById(id).style.width = `${percentage}%`;
+};
 
 // Start connection
 getLocalStream();
