@@ -202,23 +202,24 @@ let handleSignalingData = (data) => {
         sendAnswer();
         break;
       case "answer":
-        if (pc.signalingState !== "stable") {
-          console.warn(
-            "Cannot set remote description in signaling state: " +
-              pc.signalingState
-          );
-          return;
-        }
-        pc.setRemoteDescription(new RTCSessionDescription(data.data))
-          .then(() => {
-            // Remote description successfully set
-            console.log("Remote description set successfully.");
-            // Continue with the connection process if needed
-          })
-          .catch((error) => {
-            // Handle any errors that occur during setting the remote description
-            console.error("Error setting remote description:", error);
-          });
+        // Define a function to handle setting remote description
+        const setRemoteDescriptionStable = () => {
+          if (pc.signalingState === "stable") {
+            pc.setRemoteDescription(new RTCSessionDescription(data.data))
+              .then(() => {
+                // Remote description successfully set
+                console.log("Remote description set successfully.");
+                // Continue with the connection process if needed
+              })
+              .catch((error) => {
+                // Handle any errors that occur during setting the remote description
+                console.error("Error setting remote description:", error);
+              });
+          } else {
+            // Wait and try again when signaling state becomes stable
+            setTimeout(setRemoteDescriptionStable, 100); // Adjust the timeout value if needed
+          }
+        };
         break;
       case "candidate":
         pc.addIceCandidate(new RTCIceCandidate(data.data.candidate));
