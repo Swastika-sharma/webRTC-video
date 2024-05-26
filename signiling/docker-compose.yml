@@ -17,6 +17,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
+    volumes:
+        - /etc/letsencrypt/live/sparteek65.online:/etc/letsencrypt/live/sparteek65.online
     command: python signiling.py
     volumes:
       - .:/app
