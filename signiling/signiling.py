@@ -1,6 +1,6 @@
 from aiohttp import web
 import socketio
-import json
+import json, ssl
 
 ROOM = 'general'
 
@@ -9,6 +9,21 @@ sio = socketio.AsyncServer(
     ping_timeout=35
 )
 app = web.Application()
+async def handler(request):
+    return web.Response(text="Hello, HTTPS!")
+
+app = web.Application()
+app.router.add_get('/', handler)
+
+# Paths to your SSL/TLS certificate and private key files
+ssl_certfile = '/etc/letsencrypt/live/sparteek65.online/fullchain.pem'
+ssl_keyfile = '/etc/letsencrypt/live/sparteek65.online/privkey.pem'
+
+# Create SSL context
+ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+ssl_context.load_cert_chain(ssl_certfile, keyfile=ssl_keyfile)
+
+
 sio.attach(app)
 
 rooms = dict()
@@ -52,4 +67,4 @@ async def data(sid, data):
 
 
 if __name__ == '__main__':
-    web.run_app(app, port=9999)
+    web.run_app(app, port=9999,ssl_context=ssl_context)
