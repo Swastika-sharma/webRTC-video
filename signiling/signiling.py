@@ -16,8 +16,8 @@ app = web.Application()
 app.router.add_get('/', handler)
 
 # Paths to your SSL/TLS certificate and private key files
-ssl_certfile = '/etc/letsencrypt/live/sparteek65.online/fullchain.pem'
-ssl_keyfile = '/etc/letsencrypt/live/sparteek65.online/privkey.pem'
+ssl_certfile = './fullchain.pem'
+ssl_keyfile = './privkey.pem'
 
 # Create SSL context
 ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
