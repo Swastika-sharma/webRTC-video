@@ -193,6 +193,23 @@ let onTrack = (event) => {
   remoteStreamElement.srcObject = event.streams[0];
 };
 
+let iceCandidates = [];
+
+// Function to handle adding ICE candidates after setting the remote description
+const addIceCandidates = () => {
+  iceCandidates.forEach((candidate) => {
+    pc.addIceCandidate(new RTCIceCandidate(candidate))
+      .then(() => {
+        console.log("ICE candidate added successfully.");
+      })
+      .catch((error) => {
+        console.error("Error adding ICE candidate:", error);
+      });
+  });
+  // Clear the iceCandidates array after adding all candidates
+  iceCandidates = [];
+};
+
 let handleSignalingData = (data) => {
   try {
     switch (data.data.type) {
@@ -205,11 +222,12 @@ let handleSignalingData = (data) => {
         // Define a function to handle setting remote description
         const setRemoteDescriptionStable = () => {
           if (pc.signalingState === "stable") {
-            pc.setRemoteDescription(new RTCSessionDescription(data.data))
+            pc.setRemoteDescription(new RTCSessionDescription(message.data))
               .then(() => {
                 // Remote description successfully set
                 console.log("Remote description set successfully.");
-                // Continue with the connection process if needed
+                // Add ICE candidates after setting remote description
+                addIceCandidates();
               })
               .catch((error) => {
                 // Handle any errors that occur during setting the remote description
@@ -220,9 +238,32 @@ let handleSignalingData = (data) => {
             setTimeout(setRemoteDescriptionStable, 100); // Adjust the timeout value if needed
           }
         };
+
+        // Call setRemoteDescriptionStable when receiving an "answer" message
+        setRemoteDescriptionStable();
         break;
+
       case "candidate":
-        pc.addIceCandidate(new RTCIceCandidate(data.data.candidate));
+        // If remote description is already set, add ICE candidate immediately
+        if (pc.remoteDescription) {
+          pc.addIceCandidate(new RTCIceCandidate(message.data.candidate))
+            .then(() => {
+              console.log("ICE candidate added successfully.");
+            })
+            .catch((error) => {
+              console.error("Error adding ICE candidate:", error);
+            });
+        } else {
+          // If remote description is not set, queue ICE candidate to be added later
+          iceCandidates.push(message.data.candidate);
+        }
+        break;
+
+      // Handle other message types if needed
+      // case ...
+
+      default:
+        // Handle unsupported message types or other cases
         break;
     }
   } catch (error) {
