@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED 1
 
 FROM nginx:latest
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/
 # install system dependencies
 # RUN apt-get update \
 #     && apt-get -y install netcat gcc vim nano\
