@@ -10,6 +10,9 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+FROM nginx:latest
+
+COPY nginx.conf /etc/nginx/nginx.conf
 # install system dependencies
 # RUN apt-get update \
 #     && apt-get -y install netcat gcc vim nano\
