@@ -20,8 +20,8 @@ ssl_certfile = '/etc/letsencrypt/live/sparteek65.online/fullchain.pem'
 ssl_keyfile = '/etc/letsencrypt/live/sparteek65.online/privkey.pem'
 
 # Create SSL context
-ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-ssl_context.load_cert_chain(ssl_certfile, keyfile=ssl_keyfile)
+# ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+# ssl_context.load_cert_chain(ssl_certfile, keyfile=ssl_keyfile)
 
 
 sio.attach(app)
@@ -67,4 +67,4 @@ async def data(sid, data):
 
 
 if __name__ == '__main__':
-    web.run_app(app, port=9999,ssl_context=ssl_context)
+    web.run_app(app, port=9999)
