@@ -13,7 +13,6 @@
       <div class="left">
         <div class="video-container">
           <video id="localStream" autoplay playsinline></video>
-          <video id="remoteStream" autoplay playsinline></video>
           <button
             id="toggleMic"
             type="button"
@@ -23,6 +22,28 @@
           >
             🎙️
           </button>
+          <button
+            id="toggleMic"
+            type="button"
+            alt="make a call"
+            class="muted"
+            onclick="makeCall()"
+          >
+            call
+          </button>
+
+          <button
+            id="toggleMic"
+            type="button"
+            alt="make a call"
+            class="muted"
+            onclick="answerCall()"
+          >
+            answer
+          </button>
+
+          <video id="remoteStream" autoplay playsinline></video>
+          
         </div>
         <div class="filendprogress">
           <div class="file-container">
