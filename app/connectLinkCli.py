@@ -5,7 +5,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual import work, log
 from textual.worker import Worker, get_current_worker
-
+import pygame
 from textual.containers import Grid
 from textual.widgets import Button, Footer, Header, Label
 import argparse
@@ -14,6 +14,7 @@ import json
 import socketio
 from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
 import asyncio
+
 
 sio = socketio.AsyncClient()
 
@@ -84,12 +85,16 @@ class ChatScreen(Screen):
         await sio.emit("join", self.app.roomname)
         sio.on("data", self.handle_data)
         self.textContainer.mount(Label(f"connected to {self.app.friendName} !!!"))
-
+        pygame.mixer.init()
+        self.pop_sound = pygame.mixer.Sound("popsound.mp3")
+        
     async def handle_data(self, data):
         # label = Label(str(data))
         msg = data.get("data",{"msg":"unknown datatype"}).get("msg")
         friendName = data.get("data",{"username":"unknown username"}).get("username")
         self.textContainer.mount(Label(f"{friendName} >> {msg}"))
+        self.pop_sound.play()
+
 
 
 class AddFriendScreen(Screen):

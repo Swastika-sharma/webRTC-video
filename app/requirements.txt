@@ -23,6 +23,7 @@ msgpack==1.0.8
 multidict==6.0.5
 pycparser==2.22
 pyee==11.1.0
+pygame==2.5.2
 Pygments==2.18.0
 pylibsrtp==0.10.0
 pyOpenSSL==24.1.0
