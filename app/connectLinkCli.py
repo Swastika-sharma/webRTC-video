@@ -59,7 +59,7 @@ class ChatScreen(Screen):
         if event.input.id == "message_text":
             message = event.value
             self.textContainer.mount(Label(f"{self.app.username} {message}"))
-            await sio.emit("data", {"room":self.app.roomName,"data":{"msg":message,"username":self.app.username}})
+            await sio.emit("data", {"room":self.app.roomname,"data":{"msg":message,"username":self.app.username}})
             self.msg_inp.clear()
 
     async def on_input_changed(self, event: Input.Changed) -> None:
