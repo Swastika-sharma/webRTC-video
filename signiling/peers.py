@@ -2,9 +2,8 @@ import argparse
 import asyncio
 import socketio
 from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
-import os, sys
+import os
 
-from tqdm import tqdm
 
 # Socket.IO client
 sio = socketio.AsyncClient()
