@@ -1,17 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
     <title>WebRTC working example</title>
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="socket.io.js"></script>
   </head>
   <body>
     <div class="header">
       <img id="logo" src="./connectLogo.png" />
     </div>
     <div class="main">
+      
       <div class="left">
-        <div class="video-container">
+        <div class="offer"> <button class="offer-btn" onclick="SendOffer()">Offer</button> </div>
+        <div class="dontknow"> <button class="answer" disabled="true">Answered</button> </div>
+        <!-- <div class="video-container">
           <video id="localStream" autoplay playsinline></video>
           <button
             id="toggleMic"
@@ -43,8 +47,7 @@
           </button>
 
           <video id="remoteStream" autoplay playsinline></video>
-          
-        </div>
+        </div> -->
         <div class="filendprogress">
           <div class="file-container">
             <input type="file" id="fileInput" />
@@ -63,7 +66,354 @@
         <div class="chat"></div>
       </div>
     </div>
-    <script src="socket.io.js"></script>
-    <script src="main.js"></script>
+    <script>
+      const socket = io("https://sparteek65.online:9999");
+      const room = "class";
+
+      socket.on("ready", () => {
+        console.log("Ready, joining room");
+
+        socket.emit("join", room);
+      });
+
+      let peerConnection;
+      let dataChannel;
+      let localStream;
+      let fileSelector = document.getElementById("fileInput");
+      fileSelector.disabled = true;
+
+      let receivedChunks = [];
+      let receivedSize = 0;
+      let expectedFileSize = 0;
+      let filename = "";
+
+      // Assuming you already have a Socket.IO connection established
+      // and you want to send the data channel and ICE candidates over that connection
+
+      // STUN server configuration
+      const stunServer = {
+        url: "stun:stun.l.google.com:19302",
+      };
+
+      const config = {
+        iceServers: [stunServer],
+      };
+      let handleDataChannel = () => {
+        dataChannel.onopen = () => {
+          console.log("Data channel is open and ready to be used.");
+        };
+
+        dataChannel.onclose = () => {
+          console.log("Data channel is closed.");
+        };
+
+        dataChannel.onerror = (error) => {
+          console.log("Data channel error:", error);
+        };
+
+        dataChannel.onmessage = (event) => {
+          console.log("Data channel message received:", event.data);
+          // Handle incoming file data here
+        };
+
+        dataChannel.addEventListener("open", (event) => {
+            fileSelector.disabled = false;
+        });
+
+        // Disable input when closed
+        dataChannel.addEventListener("close", (event) => {
+            fileSelector.disabled = true;
+        });
+
+        peerConnection.ondatachannel = (event) => {
+          const receiveChannel = event.channel;
+          receiveChannel.onopen = () => {
+            console.log("Receive channel is open and ready to be used.");
+          };
+
+          receiveChannel.onclose = () => {
+            console.log("Receive channel is closed.");
+          };
+
+          receiveChannel.onerror = (error) => {
+            console.log("Receive channel error:", error);
+          };
+
+          receiveChannel.onmessage = (event) => {
+            console.log("Receive channel message received:", event.data);
+            if (expectedFileSize === 0) {
+              expectedFileSize = event.data;
+              console.log("recieved expected file size : ", expectedFileSize);
+              var downloadLink = document.createElement("a");
+              downloadLink.id = `${expectedFileSize}`;
+              downloadLink.style.backgroundColor = "#638f9b";
+              downloadLink.style.margin = "10px";
+              downloadLink.style.color = "white";
+              downloadLink.style.padding = "10px";
+
+              document.getElementById("download").appendChild(downloadLink);
+              return;
+            }
+            if (filename === "") {
+              filename = event.data;
+              console.log("recieved expected file size : ", expectedFileSize);
+              return;
+            }
+            downloadLink = document.getElementById(`${expectedFileSize}`);
+            receivedChunks.push(event.data);
+            receivedSize += event.data.byteLength;
+            console.log(
+              "recieved file size currently downloaded : ",
+              receivedSize
+            );
+            downloadLink.style.width = `${receivedSize / expectedFileSize}%`;
+            // Check if the received size matches the expected file size
+            if (`${receivedSize}` === `${expectedFileSize}`) {
+              console.log("download complete ");
+              const receivedBlob = new Blob(receivedChunks);
+
+              // Set the ID of the paragraph
+              downloadLink.href = URL.createObjectURL(receivedBlob);
+              downloadLink.download = filename;
+              downloadLink.style.display = "block";
+              downloadLink.textContent = filename;
+              filename = "";
+              receivedSize = 0;
+              expectedFileSize = 0;
+              receivedChunks = [];
+              downloadLink.style.width = `100%`;
+            }
+            // Handle incoming file data here
+          };
+        };
+      };
+
+      peerConnection = new RTCPeerConnection(config);
+
+      dataChannel = peerConnection.createDataChannel(room);
+      handleDataChannel();
+
+      function sendMessage(message) {
+        if (dataChannel.readyState === "open") {
+          dataChannel.send(message);
+        } else {
+          console.error("Data channel is not open");
+        }
+      }
+
+      peerConnection.onicecandidate = (event) => {
+        console.log("sending ice credentials");
+        if (event.candidate) {
+          socket.emit("data", {
+            room: room,
+            data: { ice: event.candidate, type: "ice" },
+          });
+        }
+      };
+
+      const SendOffer = () => {
+        peerConnection
+          .createOffer()
+          .then((offer) => {
+            console.log("creating offer");
+            document.getElementsByClassName("offer-btn")[0].style.backgroundColor="#21d38d";
+            return peerConnection.setLocalDescription(offer);
+          })
+          .then(() => {
+            console.log(peerConnection.localDescription);
+            socket.emit("data", {
+              room: room,
+              data: {
+                sdp: peerConnection.localDescription,
+                dataChannel: dataChannel,
+                type: "offer",
+              },
+            });
+          })
+          .catch((error) => {
+            console.error("Error creating offer:", error);
+          });
+      };
+
+      socket.on("data", (data) => {
+        console.log(data);
+        if (data.data.type == "offer") {
+          peerConnection
+            .setRemoteDescription(new RTCSessionDescription(data.data.sdp))
+            .then(() => {
+              // Handle the received data channel
+              sendAnswer();
+              //   data.data.dataChannel.onmessage = handleDataChannelMessage;
+            })
+            .catch((error) => {
+              console.error("Error processing remote description:", error);
+            });
+        }
+
+        if (data.data.type == "answer") {
+          peerConnection
+            .setRemoteDescription(new RTCSessionDescription(data.data.sdp))
+            .then(() => {
+              // Handle the received data channel
+            })
+            .catch((error) => {
+              console.error("Error processing remote description:", error);
+            });
+        }
+      });
+
+      socket.on("data", (data) => {
+        if (data.data.type == "ice") {
+          const candidate = new RTCIceCandidate(data.data.ice);
+          peerConnection.addIceCandidate(candidate).catch((error) => {
+            console.error("Error adding ICE candidate:", error);
+          });
+        }
+      });
+
+      peerConnection.ontrack = (event) => {
+        const remoteVideo = document.getElementById("remote-video");
+        remoteVideo.srcObject = event.streams[0];
+      };
+
+      function handleDataChannelMessage(event) {
+        console.log(`Message received: ${event.data}`);
+      }
+
+      peerConnection.addEventListener(
+        "iceconnectionstatechange",
+        handleICEConnectionStateChange
+      );
+
+      function handleICEConnectionStateChange() {
+        const iceConnectionState = peerConnection.iceConnectionState;
+        console.log("ICE connection state:", iceConnectionState);
+
+        switch (iceConnectionState) {
+          case "new":
+            // ICE agent is gathering addresses or waiting to be started
+            break;
+          case "checking":
+            // ICE agent has started gathering candidates for connectivity checks
+            break;
+          case "connected":
+            // A usable connection has been established
+            break;
+          case "completed":
+            // The ICE agent has finished gathering candidates and has found a connected interface
+            break;
+          case "failed":
+            // The ICE agent has finished gathering candidates but failed to find a connected interface
+            break;
+          case "disconnected":
+            // The ICE agent has been disconnected
+            break;
+          case "closed":
+            // The ICE agent has shut down and is no longer handling requests
+            break;
+        }
+      }
+
+      function sendFile(expectedFileSize, file) {
+        const chunkSize = 16 * 1024; // 16 KB chunks
+        let offset = 0;
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const arrayBuffer = reader.result;
+          sendChunk(arrayBuffer);
+        };
+
+        reader.onerror = (error) => {
+          console.error("Error reading file:", error);
+        };
+
+        function sendChunk(arrayBuffer) {
+          while (offset < arrayBuffer.byteLength) {
+            if (
+              dataChannel.bufferedAmount >
+              dataChannel.bufferedAmountLowThreshold
+            ) {
+              console.log("Data channel buffer is full, waiting...");
+              dataChannel.onbufferedamountlow = () => {
+                dataChannel.onbufferedamountlow = null;
+                sendChunk(arrayBuffer);
+              };
+              return;
+            }
+            const chunk = arrayBuffer.slice(offset, offset + chunkSize);
+            dataChannel.send(chunk);
+            offset += chunkSize;
+            console.log(`Sent chunk: ${offset} / ${arrayBuffer.byteLength}`);
+            increaseProgress(expectedFileSize, offset / file.size);
+          }
+          console.log("sending complete ");
+          increaseProgress(expectedFileSize, 100);
+        }
+
+        reader.readAsArrayBuffer(file);
+      }
+
+      // Usage example with an input element
+      document.getElementById("send").addEventListener("click", (event) => {
+        const file = fileSelector.files[0];
+        if (file) {
+          expectedFileSize = file.size;
+          filename = file.name;
+          dataChannel.send(expectedFileSize);
+          dataChannel.send(filename);
+          appendSending("sending", filename, expectedFileSize);
+          sendFile(expectedFileSize, file);
+        }
+      });
+
+      let appendSending = (parent, text, id) => {
+        // Create a new paragraph element
+        var paragraph = document.createElement("p");
+
+        // Set the ID of the paragraph
+        paragraph.id = `${id}`;
+
+        // Set the text content of the paragraph
+        paragraph.textContent = `sending ... ${text}`;
+        paragraph.style.backgroundColor = "#8b83d0";
+        paragraph.style.padding = "10px";
+        paragraph.style.color = "white";
+
+        // Set the width of the paragraph using inline styles
+
+        // Append the paragraph to the document body or any other element you want
+        document.getElementById(parent).appendChild(paragraph);
+      };
+
+      let increaseProgress = (id, percentage) => {
+        document.getElementById(id).style.width = `${percentage}%`;
+      };
+
+      const sendAnswer = () => {
+        peerConnection
+          .createAnswer()
+          .then((answer) => {
+            console.log("creating answer");
+            document.getElementsByClassName("answer")[0].style.backgroundColor="#1ace6c";
+            return peerConnection.setLocalDescription(answer);
+          })
+          .then(() => {
+            console.log(peerConnection.localDescription);
+            socket.emit("data", {
+              room: room,
+              data: {
+                sdp: peerConnection.localDescription,
+                dataChannel: dataChannel,
+                type: "answer",
+              },
+            });
+          })
+          .catch((error) => {
+            console.error("Error creating offer:", error);
+          });
+      };
+    </script>
   </body>
 </html>
