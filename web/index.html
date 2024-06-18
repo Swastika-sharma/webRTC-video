@@ -441,6 +441,8 @@
                 console.log('Got MediaStream:', stream);
                 stream.getTracks().forEach(track => {
                 console.log("adding tracks");
+                const localStream = document.getElementById("localStream");
+                localStream.srcObject = stream;
                   peerConnection.addTrack(track, stream);
               });
             })
