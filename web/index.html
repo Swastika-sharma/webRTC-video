@@ -11,11 +11,14 @@
       <img id="logo" src="./connectLogo.png" />
     </div>
     <div class="main">
-      
       <div class="left">
-        <div class="offer"> <button class="offer-btn" onclick="SendOffer()">Offer</button> </div>
-        <div class="dontknow"> <button class="answer" disabled="true">Answered</button> </div>
-        <!-- <div class="video-container">
+        <div class="offer">
+          <button class="offer-btn" onclick="SendOffer()">Offer</button>
+        </div>
+        <div class="dontknow">
+          <button class="answer" disabled="true">Answered</button>
+        </div>
+        <div class="video-container">
           <video id="localStream" autoplay playsinline></video>
           <button
             id="toggleMic"
@@ -47,7 +50,7 @@
           </button>
 
           <video id="remoteStream" autoplay playsinline></video>
-        </div> -->
+        </div>
         <div class="filendprogress">
           <div class="file-container">
             <input type="file" id="fileInput" />
@@ -117,12 +120,12 @@
         };
 
         dataChannel.addEventListener("open", (event) => {
-            fileSelector.disabled = false;
+          fileSelector.disabled = false;
         });
 
         // Disable input when closed
         dataChannel.addEventListener("close", (event) => {
-            fileSelector.disabled = true;
+          fileSelector.disabled = true;
         });
 
         peerConnection.ondatachannel = (event) => {
@@ -211,12 +214,21 @@
         }
       };
 
+      peerConnection.addEventListener('track', async (event) => {
+        console.log("getting stream")
+        const [remoteStream] = event.streams;
+        const remoteVideo = document.getElementById("remoteStream");
+        remoteVideo.srcObject = remoteStream;
+    });
+
       const SendOffer = () => {
         peerConnection
           .createOffer()
           .then((offer) => {
             console.log("creating offer");
-            document.getElementsByClassName("offer-btn")[0].style.backgroundColor="#21d38d";
+            document.getElementsByClassName(
+              "offer-btn"
+            )[0].style.backgroundColor = "#21d38d";
             return peerConnection.setLocalDescription(offer);
           })
           .then(() => {
@@ -272,7 +284,9 @@
       });
 
       peerConnection.ontrack = (event) => {
-        const remoteVideo = document.getElementById("remote-video");
+        const remoteVideo = document.getElementById("remoteStream");
+        console.log("getting stream 1")
+
         remoteVideo.srcObject = event.streams[0];
       };
 
@@ -297,7 +311,7 @@
             // ICE agent has started gathering candidates for connectivity checks
             break;
           case "connected":
-            // A usable connection has been established
+            // A usable connection has been established      
             break;
           case "completed":
             // The ICE agent has finished gathering candidates and has found a connected interface
@@ -396,7 +410,8 @@
           .createAnswer()
           .then((answer) => {
             console.log("creating answer");
-            document.getElementsByClassName("answer")[0].style.backgroundColor="#1ace6c";
+            document.getElementsByClassName("answer")[0].style.backgroundColor =
+              "#1ace6c";
             return peerConnection.setLocalDescription(answer);
           })
           .then(() => {
@@ -414,6 +429,25 @@
             console.error("Error creating offer:", error);
           });
       };
+
+
+              const constraints = {
+          'video': true,
+          'audio': true
+      }
+        
+      navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                console.log('Got MediaStream:', stream);
+                stream.getTracks().forEach(track => {
+                console.log("adding tracks");
+                  peerConnection.addTrack(track, stream);
+              });
+            })
+            .catch(error => {
+                console.error('Error accessing media devices.', error);
+            });
+      
     </script>
   </body>
 </html>

@@ -79,7 +79,7 @@ input, button {
   align-items: baseline;
   row-gap: 15px;
   position: absolute;
-  /* bottom: 0; */
+  bottom: 0;
   width: 100%;
   margin-top: 50px;
 }
