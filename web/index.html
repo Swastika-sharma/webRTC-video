@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <title>WebRTC working example</title>
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   </head>
   <body>
     <div class="header">
@@ -27,7 +29,13 @@
             class="muted"
             onclick="toggleMic()"
           >
-            🎙️
+         <!-- 🎙️ -->
+          <i class="fas fa-microphone white-icon" style="display: inline-block; margin: 0 auto;"></i>
+          <script>
+            $('#mic-icon').on('click', () => {
+              $(this).toggleClass('fas fa-microphone fas fa-microphone-slash');
+            });
+          </script>
           </button>
           <button
             id="toggleMic"
@@ -36,7 +44,8 @@
             class="muted"
             onclick="makeCall()"
           >
-            call
+          <!-- call  -->
+          <i class="fa-solid fa-video white-icon" style="display: inline-block; margin: 0 auto;"></i>
           </button>
 
           <button
@@ -46,7 +55,8 @@
             class="muted"
             onclick="answerCall()"
           >
-            answer
+          <!-- answer  swap camera -->
+          <i class="fas fa-sync-alt" style="display: inline-block; margin: 0 auto;"></i>
           </button>
 
           <video id="remoteStream" autoplay playsinline></video>
